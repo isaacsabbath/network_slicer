@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QoS Controller - Network Slice Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #6366f1;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --light-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--light-bg);
+            color: var(--text-primary);
+        }
+        
+        .sidebar {
+            background: var(--card-bg);
+            min-height: 100vh;
+            border-right: 1px solid var(--border-color);
+            padding: 2rem 0;
+        }
+        
+        .sidebar .nav-link {
+            color: var(--text-secondary);
+            padding: 0.75rem 1.5rem;
+            margin: 0.25rem 0;
+            border-radius: 0;
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        }
+        
+        .main-content {
+            padding: 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        
+        .stat-card .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card.primary .icon {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .stat-card.success .icon {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .stat-card.warning .icon {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .stat-card.danger .icon {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+        
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+        
+        .slice-table {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        
+        .table th {
+            background: var(--light-bg);
+            border: none;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 1rem;
+        }
+        
+        .table td {
+            border: none;
+            padding: 1rem;
+            vertical-align: middle;
+        }
+        
+        .priority-control {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .priority-btn {
+            padding: 0.375rem 0.75rem;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .priority-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .priority-btn:hover {
+            background: var(--light-bg);
+        }
+        
+        .qos-slider {
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+        
+        .metric-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .metric-badge.excellent {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .metric-badge.good {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .metric-badge.poor {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success-color);
+            animation: pulse 2s infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .topology-container {
+            height: 400px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .topology-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .topology-node:hover {
+            transform: scale(1.1);
+        }
+        
+        .topology-node.urllc {
+            background: var(--danger-color);
+        }
+        
+        .topology-node.embb {
+            background: var(--info-color);
+        }
+        
+        .topology-node.mmtc {
+            background: var(--success-color);
+        }
+        /* Topology slice type colors */
+        .topology-node.gaming { background: var(--danger-color); }
+        .topology-node.corp { background: var(--primary-color); }
+        .topology-node.guest { background: var(--warning-color); }
+        .topology-node.iot { background: var(--success-color); }
+        .topology-node.upstream { background: #374151; }
+        .topology-link { stroke: #94a3b8; stroke-width: 2; opacity: 0.65; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="d-flex align-items-center px-3 mb-4">
+                    <i class="fas fa-cogs me-2 text-primary"></i>
+                    <h5 class="mb-0">QoS Controller</h5>
+                </div>
+                
+                <nav class="nav nav-pills flex-column">
+                    <a class="nav-link active" href="#overview" data-bs-toggle="pill">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Overview
+                    </a>
+                    <a class="nav-link" href="#slices" data-bs-toggle="pill">
+                        <i class="fas fa-layer-group me-2"></i>
+                        Active Slices
+                    </a>
+                    <a class="nav-link" href="#topology" data-bs-toggle="pill">
+                        <i class="fas fa-project-diagram me-2"></i>
+                        Network Topology
+                    </a>
+                    <a class="nav-link" href="#analytics" data-bs-toggle="pill">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Analytics
+                    </a>
+                    <a class="nav-link" href="/" target="_blank">
+                        <i class="fas fa-external-link-alt me-2"></i>
+                        Main Dashboard
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div class="tab-pane fade show active" id="overview">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div>
+                                <h2>QoS Controller Dashboard</h2>
+                                <p class="text-muted mb-0">Real-time network slice management and quality of service control</p>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="live-indicator"></div>
+                                <span class="text-success fw-medium">Live Monitoring</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Stats Grid -->
+                        <div class="stats-grid">
+                            <div class="stat-card primary">
+                                <div class="icon">
+                                    <i class="fas fa-layer-group"></i>
+                                </div>
+                                <div class="value">{{ slices.count }}</div>
+                                <div class="label">Total Slices</div>
+                            </div>
+                            
+                            <div class="stat-card success">
+                                <div class="icon">
+                                    <i class="fas fa-play-circle"></i>
+                                </div>
+                                <div class="value">{{ active_slices.count }}</div>
+                                <div class="label">Active Slices</div>
+                            </div>
+                            
+                            <div class="stat-card warning">
+                                <div class="icon">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                </div>
+                                <div class="value">{{ total_bandwidth }}</div>
+                                <div class="label">Total Bandwidth (Mbps)</div>
+                            </div>
+                            
+                            <div class="stat-card danger">
+                                <div class="icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="value">{{ avg_latency }}</div>
+                                <div class="label">Avg Latency (ms)</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Charts -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <h5>Slice Type Distribution</h5>
+                                    <canvas id="sliceTypeChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <h5>Bandwidth Utilization</h5>
+                                    <canvas id="bandwidthChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Resource Usage by Type -->
+                        <div class="chart-container">
+                            <h5>Resource Usage by Slice Type</h5>
+                            <div class="row">
+                                {% for slice_type, usage in resource_usage.items %}
+                                <div class="col-md-4">
+                                    <div class="text-center p-3">
+                                        <i class="fas fa-{% if slice_type == 'GAMING' %}gamepad{% elif slice_type == 'CORP' %}building{% elif slice_type == 'GUEST' %}users{% else %}microchip{% endif %} fa-2x mb-2 text-primary"></i>
+                                            <h6>{{ slice_type }}</h6>
+                                        <div class="small text-muted">
+                                            <div>{{ usage.count }} slices</div>
+                                            <div>{{ usage.bandwidth }} Mbps</div>
+                                            <div>{{ usage.avg_latency|floatformat:1 }} ms avg</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Active Slices Tab -->
+                    <div class="tab-pane fade" id="slices">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3>Active Network Slices</h3>
+                            <button class="btn btn-primary" onclick="refreshMetrics()">
+                                <i class="fas fa-sync-alt"></i> Refresh Metrics
+                            </button>
+                        </div>
+                        
+                        <div class="slice-table">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Slice Name</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Bandwidth</th>
+                                        <th>Latency</th>
+                                        <th>Priority</th>
+                                        <th>QoS Controls</th>
+                                        <th>Connected</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for slice in active_slices %}
+                                    <tr data-slice-id="{{ slice.id }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-{% if slice.slice_type == 'GAMING' %}gamepad{% elif slice.slice_type == 'CORP' %}building{% elif slice.slice_type == 'GUEST' %}users{% else %}microchip{% endif %} me-2 text-primary"></i>
+                                                <div>
+                                                    <strong>{{ slice.name }}</strong>
+                                                    <br><small class="text-muted">VLAN {{ slice.vlan_id }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ slice.get_slice_type_display }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="metric-badge excellent">
+                                                <i class="fas fa-circle"></i>
+                                                {{ slice.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="bandwidth-control">
+                                                <input type="range" class="qos-slider" min="1" max="1000" value="{{ slice.bandwidth_mbps }}" 
+                                                       onchange="updateBandwidth('{{ slice.id }}', this.value)">
+                                                <small class="d-block text-center"><span id="bw-{{ slice.id }}">{{ slice.bandwidth_mbps }}</span> Mbps</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="latency-control">
+                                                <input type="range" class="qos-slider" min="1" max="1000" value="{{ slice.latency_ms }}" 
+                                                       onchange="updateLatency('{{ slice.id }}', this.value)">
+                                                <small class="d-block text-center"><span id="lat-{{ slice.id }}">{{ slice.latency_ms }}</span> ms</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="priority-control">
+                                                <button class="priority-btn" onclick="setPriority('{{ slice.id }}', 'high')">High</button>
+                                                <button class="priority-btn active" onclick="setPriority('{{ slice.id }}', 'normal')">Normal</button>
+                                                <button class="priority-btn" onclick="setPriority('{{ slice.id }}', 'low')">Low</button>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" onclick="showMetrics('{{ slice.id }}')">
+                                                    <i class="fas fa-chart-line"></i>
+                                                </button>
+                                                <button class="btn btn-outline-success" onclick="optimizeQos('{{ slice.id }}')">
+                                                    <i class="fas fa-magic"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <button class="btn btn-outline-secondary btn-sm" onclick="showConnectedDevices('{{ slice.id }}')">
+                                                    <i class="fas fa-plug"></i> View
+                                                </button>
+                                                <small class="text-muted d-block" id="cd-count-{{ slice.id }}">--</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="/api/slices/{{ slice.id }}/network_info/" target="_blank" class="btn btn-outline-info">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </a>
+                                                <button class="btn btn-outline-success" onclick="runSpeedTest('{{ slice.id }}')">
+                                                    <i class="fas fa-gauge"></i>
+                                                </button>
+                                                <button class="btn btn-outline-warning" onclick="pauseSlice('{{ slice.id }}')">
+                                                    <i class="fas fa-pause"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4">
+                                            <i class="fas fa-network-wired fa-3x text-muted mb-3"></i>
+                                            <h5>No Active Slices</h5>
+                                            <p class="text-muted">Create network slices from the main dashboard to manage QoS settings.</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Network Topology Tab -->
+                    <div class="tab-pane fade" id="topology">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3>Network Topology</h3>
+                            <button class="btn btn-primary" onclick="refreshTopology()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                            <div class="form-check form-switch ms-3">
+                                <input class="form-check-input" type="checkbox" id="autoRefreshToggle" onchange="toggleAutoRefresh(this.checked)">
+                                <label class="form-check-label" for="autoRefreshToggle">Auto Refresh (5s)</label>
+                            </div>
+                        </div>
+                        
+                        <div class="topology-container" id="topologyCanvas">
+                            <svg id="topologySvg" width="100%" height="100%"></svg>
+                            <div class="position-absolute top-50 start-50 translate-middle text-center" id="topologyEmpty">
+                                <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+                                <h5>Network Topology</h5>
+                                <p class="text-muted mb-0">No active slices yet. Create a slice to populate the graph.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Analytics Tab -->
+                    <div class="tab-pane fade" id="analytics">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3>Analytics & Insights</h3>
+                            <div class="btn-group">
+                                <button class="btn btn-outline-primary active" onclick="setTimeRange('1h')">1H</button>
+                                <button class="btn btn-outline-primary" onclick="setTimeRange('24h')">24H</button>
+                                <button class="btn btn-outline-primary" onclick="setTimeRange('7d')">7D</button>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="chart-container">
+                                    <h5>Real-time Performance Metrics</h5>
+                                    <canvas id="performanceChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <h5>Slice Utilization Trends</h5>
+                                    <canvas id="utilizationChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="chart-container">
+                                    <h5>QoS Performance Score</h5>
+                                    <canvas id="qosScoreChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            startLiveUpdates();
+            fetch('/qos/topology/').then(r => r.json()).then(d => updateTopology(d)).catch(() => {});
+            // Optionally enable auto refresh by default: set checked and start
+            // document.getElementById('autoRefreshToggle').checked = true; toggleAutoRefresh(true);
+        });
+        
+        function initializeCharts() {
+            // Slice Type Distribution Chart
+            const sliceTypeCtx = document.getElementById('sliceTypeChart').getContext('2d');
+            new Chart(sliceTypeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Gaming', 'Corporate', 'Guest', 'IoT'],
+                    datasets: [{
+                        data: [
+                            {{ resource_usage.GAMING.count }},
+                            {{ resource_usage.CORP.count }},
+                            {{ resource_usage.GUEST.count }},
+                            {{ resource_usage.IOT.count }}
+                        ],
+                        backgroundColor: ['#ef4444', '#3b82f6', '#10b981', '#6366f1']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Bandwidth Utilization Chart
+            const bandwidthCtx = document.getElementById('bandwidthChart').getContext('2d');
+            new Chart(bandwidthCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Gaming', 'Corporate', 'Guest', 'IoT'],
+                    datasets: [{
+                        label: 'Bandwidth (Mbps)',
+                        data: [
+                            {{ resource_usage.GAMING.bandwidth }},
+                            {{ resource_usage.CORP.bandwidth }},
+                            {{ resource_usage.GUEST.bandwidth }},
+                            {{ resource_usage.IOT.bandwidth }}
+                        ],
+                        backgroundColor: ['#ef4444', '#3b82f6', '#10b981', '#6366f1']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Performance Chart (Real-time)
+            const performanceCtx = document.getElementById('performanceChart');
+            if (performanceCtx) {
+                const chart = new Chart(performanceCtx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Total Throughput (Mbps)',
+                            data: [],
+                            borderColor: '#4f46e5',
+                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                            tension: 0.4
+                        }, {
+                            label: 'Average Latency (ms)',
+                            data: [],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        }
+                    }
+                });
+                
+                // Store chart reference for updates
+                window.performanceChart = chart;
+            }
+        }
+        
+        // QoS Control Functions
+        function updateBandwidth(sliceId, value) {
+            document.getElementById(`bw-${sliceId}`).textContent = value;
+            
+            fetch(`/qos/adjust/${sliceId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({bandwidth_mbps: parseInt(value)})
+            })
+            .then(response => response.json())
+            .then(data => {
+                showNotification(data.message, data.status);
+            });
+        }
+        
+        function updateLatency(sliceId, value) {
+            document.getElementById(`lat-${sliceId}`).textContent = value;
+            
+            fetch(`/qos/adjust/${sliceId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({latency_ms: parseInt(value)})
+            })
+            .then(response => response.json())
+            .then(data => {
+                showNotification(data.message, data.status);
+            });
+        }
+        
+        function setPriority(sliceId, priority) {
+            // Update UI
+            const row = document.querySelector(`tr[data-slice-id="${sliceId}"]`);
+            const priorityBtns = row.querySelectorAll('.priority-btn');
+            priorityBtns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            fetch(`/qos/priority/${sliceId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({priority: priority})
+            })
+            .then(response => response.json())
+            .then(data => {
+                showNotification(data.message, data.status);
+                if (data.new_bandwidth) {
+                    const bwElement = document.getElementById(`bw-${sliceId}`);
+                    if (bwElement) {
+                        bwElement.textContent = data.new_bandwidth;
+                    }
+                }
+            });
+        }
+        
+        function showMetrics(sliceId) {
+            // Show detailed metrics modal (implement as needed)
+            alert(`Showing detailed metrics for slice ${sliceId}`);
+        }
+        
+        function optimizeQos(sliceId) {
+            showNotification('Auto-optimization applied', 'success');
+        }
+        
+        function pauseSlice(sliceId) {
+            if (confirm('Pause this network slice?')) {
+                showNotification('Slice paused', 'warning');
+            }
+        }
+        
+        function refreshMetrics() {
+            fetch('/qos/metrics/')
+                .then(response => response.json())
+                .then(data => {
+                    updateLiveMetrics(data);
+                    showNotification('Metrics refreshed', 'success');
+                });
+        }
+        
+        function refreshTopology() {
+            fetch('/qos/topology/')
+                .then(response => response.json())
+                .then(data => {
+                    updateTopology(data);
+                    showNotification('Topology updated', 'success');
+                });
+        }
+        
+        function updateLiveMetrics(data) {
+            // Update performance chart with real-time data
+            if (window.performanceChart && data.slice_metrics) {
+                const now = new Date().toLocaleTimeString();
+                const totalThroughput = data.slice_metrics.reduce((sum, slice) => sum + slice.current_throughput, 0);
+                const avgLatency = data.slice_metrics.reduce((sum, slice) => sum + slice.current_latency, 0) / data.slice_metrics.length;
+                
+                window.performanceChart.data.labels.push(now);
+                window.performanceChart.data.datasets[0].data.push(totalThroughput);
+                window.performanceChart.data.datasets[1].data.push(avgLatency);
+                
+                // Keep only last 20 data points
+                if (window.performanceChart.data.labels.length > 20) {
+                    window.performanceChart.data.labels.shift();
+                    window.performanceChart.data.datasets[0].data.shift();
+                    window.performanceChart.data.datasets[1].data.shift();
+                }
+                
+                window.performanceChart.update();
+            }
+        }
+        
+        function updateTopology(data) {
+            const svg = document.getElementById('topologySvg');
+            const empty = document.getElementById('topologyEmpty');
+            if (!svg) return;
+            while (svg.firstChild) svg.removeChild(svg.firstChild);
+            const nodes = data.nodes || [];
+            const links = data.links || [];
+            const sliceNodes = nodes.filter(n => String(n.id) !== 'upstream');
+            if (sliceNodes.length === 0) { if (empty) empty.style.display = 'block'; return; }
+            if (empty) empty.style.display = 'none';
+
+            const width = svg.clientWidth || svg.parentElement.clientWidth;
+            const height = svg.clientHeight || svg.parentElement.clientHeight;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height)/2 - 70;
+
+            const positioned = [];
+            const upstream = nodes.find(n => String(n.id) === 'upstream');
+            if (upstream) positioned.push({...upstream, x:centerX, y:centerY});
+            sliceNodes.forEach((n,i) => {
+                const angle = (2*Math.PI*i)/sliceNodes.length;
+                const x = centerX + radius*Math.cos(angle);
+                const y = centerY + radius*Math.sin(angle);
+                positioned.push({...n,x,y});
+            });
+
+            links.forEach(l => {
+                const src = positioned.find(p => String(p.id) === String(l.source));
+                const tgt = positioned.find(p => String(p.id) === String(l.target));
+                if (!(src&&tgt)) return;
+                const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+                line.setAttribute('x1', src.x); line.setAttribute('y1', src.y);
+                line.setAttribute('x2', tgt.x); line.setAttribute('y2', tgt.y);
+                line.setAttribute('class','topology-link');
+                svg.appendChild(line);
+            });
+
+            positioned.forEach(n => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+                const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+                circle.setAttribute('r','28');
+                circle.setAttribute('cx', n.x); circle.setAttribute('cy', n.y);
+                circle.setAttribute('class',`topology-node ${String(n.type||'').toLowerCase()}`);
+                g.appendChild(circle);
+                const label = document.createElementNS('http://www.w3.org/2000/svg','text');
+                label.setAttribute('x', n.x); label.setAttribute('y', n.y+4);
+                label.setAttribute('text-anchor','middle');
+                label.setAttribute('fill','#fff'); label.setAttribute('font-size','10'); label.setAttribute('font-weight','600');
+                const devCount = n.connected_devices_count || 0;
+                label.textContent = (n.type==='UPSTREAM' ? 'UPSTREAM' : (n.name||'').substring(0,8)) + (devCount?` (${devCount})`: '');
+                g.appendChild(label);
+                const title = document.createElementNS('http://www.w3.org/2000/svg','title');
+                title.textContent = `${n.name}\nBW: ${n.bandwidth_mbps||'—'} Mbps\nLat: ${n.latency_ms||'—'} ms\nDevices: ${devCount}`;
+                g.appendChild(title);
+                svg.appendChild(g);
+            });
+        }
+        
+        function startLiveUpdates() {
+            setInterval(() => {
+                fetch('/qos/metrics/')
+                    .then(response => response.json())
+                    .then(data => updateLiveMetrics(data))
+                    .catch(error => console.log('Metrics update failed:', error));
+            }, 5000);
+            setInterval(() => {
+                fetch('/qos/topology/')
+                    .then(r => r.json())
+                    .then(d => updateTopology(d))
+                    .catch(() => {});
+            }, 8000);
+        }
+
+        // Auto-refresh (full page reload) feature
+        let autoRefreshTimer = null;
+        function toggleAutoRefresh(enabled) {
+            if (autoRefreshTimer) {
+                clearTimeout(autoRefreshTimer);
+                autoRefreshTimer = null;
+            }
+            if (enabled) {
+                autoRefreshTimer = setTimeout(() => {
+                    window.location.reload();
+                }, 5000);
+            }
+        }
+        
+        function showNotification(message, type) {
+            // Simple notification system
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'danger'} position-fixed`;
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '9999';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        function setTimeRange(range) {
+            // Update chart time range
+            document.querySelectorAll('.btn-outline-primary').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            showNotification(`Time range set to ${range}`, 'info');
+        }
+        
+        // Add CSRF token to all requests
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (!csrfToken) {
+            // Create hidden CSRF token input
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = 'csrfmiddlewaretoken';
+            tokenInput.value = '{{ csrf_token }}';
+            document.body.appendChild(tokenInput);
+        }
+    </script>
+
+        <!-- Connected Devices / Speed Test Modal -->
+        <div class="modal fade" id="sliceModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="sliceModalTitle">Slice Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="sliceModalBody">
+                            <div class="text-muted">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            async function showConnectedDevices(sliceId) {
+                try {
+                    const res = await fetch(`/api/slices/${sliceId}/connected_devices/`);
+                    const data = await res.json();
+                    const body = document.getElementById('sliceModalBody');
+                    const title = document.getElementById('sliceModalTitle');
+                    title.textContent = `Connected Devices for Slice ${sliceId}`;
+                    if (!data.connected_devices || data.connected_devices.length === 0) {
+                        body.innerHTML = '<div class="text-muted">No devices connected</div>';
+                    } else {
+                        const rows = data.connected_devices.map(d => `
+                            <tr>
+                                <td>${d.hostname || 'Unknown'}</td>
+                                <td>${d.ip || '—'}</td>
+                                <td>${d.mac || '—'}</td>
+                            </tr>`).join('');
+                        body.innerHTML = `
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead><tr><th>Hostname</th><th>IP</th><th>MAC</th></tr></thead>
+                                    <tbody>${rows}</tbody>
+                                </table>
+                            </div>`;
+                    }
+                    const modalEl = document.getElementById('sliceModal');
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                } catch (e) {
+                    showNotification('Failed to load connected devices', 'danger');
+                }
+            }
+
+            async function runSpeedTest(sliceId) {
+                try {
+                    const res = await fetch(`/api/slices/${sliceId}/speed_test/`);
+                    const data = await res.json();
+                    const body = document.getElementById('sliceModalBody');
+                    const title = document.getElementById('sliceModalTitle');
+                    title.textContent = `Speed Test for Slice ${sliceId}`;
+                    body.innerHTML = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card p-3 mb-2">
+                                    <div class="small text-muted">Allocated Bandwidth</div>
+                                    <div class="h4">${data.allocated_bandwidth_mbps ?? '—'} Mbps</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card p-3 mb-2">
+                                    <div class="small text-muted">Measured Throughput</div>
+                                    <div class="h4">${data.measured_throughput_mbps ?? '—'} Mbps</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card p-3 mb-2">
+                                    <div class="small text-muted">Average Latency</div>
+                                    <div class="h4">${data.avg_latency_ms ?? '—'} ms</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card p-3 mb-2">
+                                    <div class="small text-muted">Method</div>
+                                    <div>${data.method || '—'}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                    const modalEl = document.getElementById('sliceModal');
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                } catch (e) {
+                    showNotification('Speed test failed', 'danger');
+                }
+            }
+
+            // Periodically refresh connected device counts next to each slice
+            async function refreshConnectedCounts() {
+                try {
+                    const res = await fetch('/api/slices/status_snapshot/');
+                    const data = await res.json();
+                    (data.results || []).forEach(s => {
+                        const el = document.getElementById(`cd-count-${s.id}`);
+                        if (el && typeof s.connected_devices_count === 'number') {
+                            el.textContent = `${s.connected_devices_count} device(s)`;
+                        }
+                    });
+                } catch (_) {}
+            }
+            setInterval(refreshConnectedCounts, 4000);
+            refreshConnectedCounts();
+        </script>
+</body>
+</html>

@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureSlice System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #6366f1;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --light-bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-primary);
+        }
+        
+        .main-container {
+            background: var(--light-bg);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        
+        .header {
+            background: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 2rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .header .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        
+        .stat-card .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card.active .icon {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .stat-card.provisioning .icon {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .stat-card.inactive .icon {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+        
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .dashboard-tabs {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        
+        .tab-content {
+            padding: 0;
+        }
+        
+        .slice-grid {
+            display: grid;
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+        
+        .slice-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .slice-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+        
+        .slice-card.active {
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .slice-card.provisioning {
+            border-left: 4px solid var(--warning-color);
+        }
+        
+        .slice-card.inactive {
+            border-left: 4px solid var(--danger-color);
+        }
+        
+        .slice-card.requested {
+            border-left: 4px solid var(--text-secondary);
+        }
+        
+        .slice-header {
+            padding: 1.5rem 1.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .slice-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .slice-meta {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        
+        .badge.active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+        
+        .badge.provisioning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .badge.inactive {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .badge.requested {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--text-secondary);
+        }
+        
+        .slice-body {
+            padding: 0 1.5rem 1.5rem;
+        }
+        
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .metric {
+            text-align: center;
+            padding: 0.75rem;
+            background: var(--light-bg);
+            border-radius: 8px;
+        }
+        
+        .metric-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        
+        .connection-panel {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+            border: 1px solid rgba(79, 70, 229, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .qr-section {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .qr-code {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .connection-details h6 {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .connection-info {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+        
+        .network-details {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .network-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.75rem;
+        }
+        
+        .network-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+        
+        .network-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .network-value {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 6px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #d97706;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+        
+        .btn-outline:hover {
+            background: var(--light-bg);
+            color: var(--text-primary);
+        }
+        
+        .create-slice-panel {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .grafana-panel {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .grafana-embed {
+            width: 100%;
+            height: 400px;
+            border: none;
+            border-radius: 8px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem 0;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .slice-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                justify-content: center;
+            }
+        }
+        
+        /* Status Badge Styles */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+        
+        .status-requested { background-color: #ffc107; color: #212529; }
+        .status-provisioning { background-color: #17a2b8; color: white; }
+        .status-active { background-color: #28a745; color: white; }
+        .status-error { background-color: #dc3545; color: white; }
+        .status-stopped { background-color: #6c757d; color: white; }
+        
+        /* Connected Devices Styles */
+        .connected-devices {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        
+        .device-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 0.9em;
+        }
+        
+        .device-item:last-child { border-bottom: none; }
+        
+        .device-hostname { font-weight: 500; }
+        .device-details { color: #6c757d; font-size: 0.8em; }
+        
+        /* Role-based Dashboard Styles */
+        .qos-controller-panel {
+            margin-bottom: 2rem;
+        }
+        
+        .qos-quick-stats .metric {
+            padding: 1rem;
+            background: var(--light-bg);
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .guest-info-panel {
+            margin-bottom: 2rem;
+        }
+        
+        .guest-slice-info {
+            background: rgba(25, 135, 84, 0.05);
+            border: 1px solid rgba(25, 135, 84, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .guest-slice-info h6 {
+            color: var(--success-color);
+            margin-bottom: 0.75rem;
+        }
+        
+        .nav-pills .btn {
+            border-radius: 20px;
+        }
+        
+        .nav-pills .btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* Admin badge styling */
+        .badge {
+            font-size: 0.6em;
+        }
+        
+        /* QoS Verification Styles */
+        .qos-verification-panel {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .qos-verification-panel h6 {
+            color: var(--info-color);
+            margin-bottom: 0.75rem;
+        }
+        
+        .qos-status {
+            margin-left: 0.5rem;
+            font-size: 0.8em;
+        }
+        
+        .qos-verification-content .row > div {
+            margin-bottom: 0.5rem;
+        }
+        
+        .qos-verification-status {
+            margin-top: 0.75rem;
+        }
+        
+        .qos-verification-status .alert {
+            margin-bottom: 0;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .qos-verification-status ul {
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body
+    <div class="main-container">
+        <div class="header">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1>
+                            <i class="fas fa-network-wired"></i>
+                            SecureSlice System 
+                        </h1>
+                        <div class="subtitle">Intelligent QoS Management & Real-time Monitoring</div>
+                    </div>
+                    <div class="navbar-nav d-flex align-items-center">
+                        {% if user.is_staff %}
+                        <!-- Admin Navigation Menu -->
+                        <div class="nav-pills me-3">
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                            <a href="{% url 'qos_controller' %}" class="btn btn-outline-info me-2">
+                                <i class="fas fa-cogs"></i> QoS Controller
+                            </a>
+                            <a href="/admin/" class="btn btn-outline-warning me-2">
+                                <i class="fas fa-user-shield"></i> Admin Panel
+                            </a>
+                        </div>
+                        {% endif %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> {{ user.username }}
+                                {% if user.is_staff %}<span class="badge bg-warning ms-1">Admin</span>{% else %}<span class="badge bg-info ms-1">Guest</span>{% endif %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'password_change' %}"><i class="fas fa-key"></i> Change Password</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <!-- Statistics Overview - Only for Admin/Staff -->
+            {% if user.is_staff %}
+            <div class="stats-grid">
+                <div class="stat-card active">
+                    <div class="icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="value">{{ slices|length|add:0 }}</div>
+                    <div class="label">Total Slices</div>
+                </div>
+                <div class="stat-card active">
+                    <div class="icon">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <div class="value">{% for slice in slices %}{% if slice.status == 'ACTIVE' %}{{ forloop.counter0|add:1 }}{% endif %}{% empty %}0{% endfor %}</div>
+                    <div class="label">Active Slices</div>
+                </div>
+                <div class="stat-card provisioning">
+                    <div class="icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <div class="value">{% for slice in slices %}{% if slice.status == 'PROVISIONING' %}{{ forloop.counter0|add:1 }}{% endif %}{% empty %}0{% endfor %}</div>
+                    <div class="label">Provisioning</div>
+                </div>
+                <div class="stat-card inactive">
+                    <div class="icon">
+                        <i class="fas fa-pause-circle"></i>
+                    </div>
+                    <div class="value">{% for slice in slices %}{% if slice.status == 'INACTIVE' %}{{ forloop.counter0|add:1 }}{% endif %}{% empty %}0{% endfor %}</div>
+                    <div class="label">Inactive</div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- QoS Controller Panel - Only for Admin/Staff -->
+            {% if user.is_staff %}
+            <div class="qos-controller-panel">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-cogs"></i> QoS Controller</h5>
+                        <a href="{% url 'qos_controller' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-external-link-alt"></i> Full QoS Dashboard
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="qos-quick-stats">
+                                    <h6>Quick Stats</h6>
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <div class="metric">
+                                                <div class="metric-value">{{ slices|length }}</div>
+                                                <div class="metric-label">Total Slices</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="metric">
+                                                <div class="metric-value">{% for slice in slices %}{% if slice.status == 'ACTIVE' %}{{ forloop.counter0|add:1 }}{% endif %}{% empty %}0{% endfor %}</div>
+                                                <div class="metric-label">Active Now</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="qos-actions">
+                                    <h6>Quick Actions</h6>
+                                    <div class="btn-group-vertical d-grid gap-2">
+                                        <button class="btn btn-outline-info btn-sm" onclick="refreshLiveMetrics()">
+                                            <i class="fas fa-sync-alt"></i> Refresh Metrics
+                                        </button>
+                                        <a href="{% url 'qos_controller' %}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-chart-area"></i> View Analytics
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Live Slice Stats (simplified; Grafana removed) -->
+            {% if user.is_staff %}
+            <div class="slice-stats-panel">
+                <h4><i class="fas fa-chart-line"></i> Slice Stats</h4>
+                <p class="text-muted mb-3">Real-time metrics integration removed; showing static slice counters.</p>
+                <div class="row" id="liveMetrics">
+                    <div class="col-md-3 mb-2">
+                        <div class="metric text-center p-3">
+                            <div class="metric-label">Active Slices</div>
+                            <div class="metric-value" id="lm-active">—</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="metric text-center p-3">
+                            <div class="metric-label">Total Throughput (Mbps)</div>
+                            <div class="metric-value" id="lm-throughput">—</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="metric text-center p-3">
+                            <div class="metric-label">Avg Latency (ms)</div>
+                            <div class="metric-value" id="lm-latency">—</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="metric text-center p-3">
+                            <div class="metric-label">Docker Networks</div>
+                            <div class="metric-value" id="lm-dnet">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Guest User Limited Stats -->
+            <div class="guest-info-panel">
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Guest Access:</strong> You can create and manage your own network slices. For advanced features and system administration, contact your administrator.
+                </div>
+            </div>
+            {% endif %}
+        
+            <!-- Network Slices Dashboard -->
+            <div class="dashboard-tabs">
+                <ul class="nav nav-tabs" id="sliceTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab">
+                            <i class="fas fa-play-circle"></i> Active Slices
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+                            <i class="fas fa-list"></i> All Slices
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="sliceTabContent">
+                    <div class="tab-pane fade show active" id="active" role="tabpanel">
+                        <div class="slice-grid">
+                            {% for slice in slices %}
+                            {% if slice.status == 'ACTIVE' %}
+                            <div class="slice-card {{ slice.status|lower }}" data-slice-id="{{ slice.id }}">
+                                <div class="slice-header">
+                                    <div>
+                                        <h5 class="slice-title">
+                                            <i class="fas fa-{% if slice.slice_type == 'GAMING' %}gamepad{% elif slice.slice_type == 'CORP' %}building{% elif slice.slice_type == 'GUEST' %}users{% else %}microchip{% endif %}"></i>
+                                            {{ slice.name }}
+                                        </h5>
+                                        <div class="slice-meta">
+                                            <span class="status-badge status-{{ slice.status|lower }}" data-slice-id="{{ slice.id }}">{{ slice.get_status_display }}</span>
+                                            <span class="badge" style="background: rgba(79, 70, 229, 0.1); color: var(--primary-color);">{{ slice.get_slice_type_display }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="slice-body">
+                                    <div class="metrics-row">
+                                        <div class="metric">
+                                            <div class="metric-value" id="bandwidth-{{ slice.id }}">{{ slice.bandwidth_mbps }}</div>
+                                            <div class="metric-label">
+                                                Mbps 
+                                                {% if slice.status == 'ACTIVE' %}
+                                                <span class="qos-status" id="qos-status-{{ slice.id }}">
+                                                    <i class="fas fa-spinner fa-spin text-warning" title="Checking QoS..."></i>
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="metric">
+                                            <div class="metric-value">{{ slice.latency_ms }}</div>
+                                            <div class="metric-label">ms Latency</div>
+                                        </div>
+                                        <div class="metric">
+                                            <div class="metric-value">{{ slice.duration_hours }}</div>
+                                            <div class="metric-label">Hours</div>
+                                        </div>
+                                        <div class="metric">
+                                            <div class="metric-value">{{ slice.vlan_id|default:"N/A" }}</div>
+                                            <div class="metric-label">VLAN ID</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- QoS Verification Panel - Only for Active Slices -->
+                                    {% if slice.status == 'ACTIVE' %}
+                                    <div class="qos-verification-panel" id="qos-panel-{{ slice.id }}" style="display: none;">
+                                        <h6><i class="fas fa-tachometer-alt"></i> Bandwidth Verification</h6>
+                                        <div class="qos-verification-content">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <small class="text-muted">Requested:</small>
+                                                    <div><strong>{{ slice.bandwidth_mbps }} Mbps</strong></div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <small class="text-muted">Actual:</small>
+                                                    <div id="actual-bandwidth-{{ slice.id }}"><i class="fas fa-spinner fa-spin"></i> Checking...</div>
+                                                </div>
+                                            </div>
+                                            <div class="qos-verification-status" id="qos-verification-{{ slice.id }}">
+                                                <div class="alert alert-info" role="alert">
+                                                    <i class="fas fa-info-circle"></i> Verifying QoS configuration...
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="connection-panel">
+                                        <h6><i class="fas fa-wifi"></i> WiFi Connection</h6>
+                                        <div class="qr-section">
+                                            <div class="qr-code">
+                                                <div class="qr-code-container">
+                                                    {% if slice.qr_code %}
+                                                    <img src="{{ slice.qr_code }}" alt="WiFi QR Code" style="width: 80px; height: 80px;">
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="connection-details">
+                                                <div class="connection-info">
+                                                    {% if slice.ssid_name %}
+                                                    <strong>SSID:</strong> {{ slice.ssid_name }}<br>
+                                                    <strong>Password:</strong> {{ slice.wifi_password }}
+                                                    {% endif %}
+                                                </div>
+                                                <small class="text-muted">Scan QR code or connect manually</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if slice.network_info %}
+                                    <div class="network-details">
+                                        <h6><i class="fab fa-docker"></i> Docker Network Details</h6>
+                                        <div class="network-grid">
+                                            <div class="network-item">
+                                                <span class="network-label">Network:</span>
+                                                <span class="network-value">{{ slice.network_info.network_name }}</span>
+                                            </div>
+                                            <div class="network-item">
+                                                <span class="network-label">Driver:</span>
+                                                <span class="network-value">{{ slice.network_info.driver }}</span>
+                                            </div>
+                                            <div class="network-item">
+                                                <span class="network-label">Subnet:</span>
+                                                <span class="network-value">{{ slice.network_info.subnet }}</span>
+                                            </div>
+                                            <div class="network-item">
+                                                <span class="network-label">Gateway:</span>
+                                                <span class="network-value">{{ slice.network_info.gateway }}</span>
+                                            </div>
+                                            {% if slice.network_info.discovery_url %}
+                                            <div class="network-item">
+                                                <span class="network-label">Discovery:</span>
+                                                <a href="{{ slice.network_info.discovery_url }}" target="_blank" class="network-value">Available</a>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Connected Devices hidden on public dashboard -->
+                                    
+                                    <div class="actions">
+                                        <a href="/api/slices/{{ slice.id }}/qr_code/" target="_blank" class="btn btn-outline">
+                                            <i class="fas fa-qrcode"></i> QR Code
+                                        </a>
+                                        <a href="/api/slices/{{ slice.id }}/network_info/" target="_blank" class="btn btn-outline">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </a>
+                                        <form action="/api/slices/{{ slice.id }}/terminate/" method="post" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-warning" onclick="return confirm('Terminate this slice?')">
+                                                <i class="fas fa-stop"></i> Terminate
+                                            </button>
+                                        </form>
+                                        <form action="" method="post" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="slice_id" value="{{ slice.id }}">
+                                            <button type="submit" class="btn btn-danger" onclick="return confirm('Permanently delete slice {{ slice.name }}? This cannot be undone.')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% empty %}
+                            <div class="empty-state">
+                                <i class="fas fa-network-wired"></i>
+                                <h5>No Active Slices</h5>
+                                <p>Create your first network slice to get started.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="all" role="tabpanel">
+                        <div class="slice-grid">
+                            {% for slice in slices %}
+                            <div class="slice-card {{ slice.status|lower }}" data-slice-id="{{ slice.id }}">
+                                <div class="slice-header">
+                                    <div>
+                                        <h5 class="slice-title">
+                                            <i class="fas fa-{% if slice.slice_type == 'GAMING' %}gamepad{% elif slice.slice_type == 'CORP' %}building{% elif slice.slice_type == 'GUEST' %}users{% else %}microchip{% endif %}"></i>
+                                            {{ slice.name }}
+                                        </h5>
+                                        <div class="slice-meta">
+                                            <span class="status-badge status-{{ slice.status|lower }}" data-slice-id="{{ slice.id }}">{{ slice.get_status_display }}</span>
+                                            <span class="badge" style="background: rgba(79, 70, 229, 0.1); color: var(--primary-color);">{{ slice.get_slice_type_display }}</span>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ slice.created_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                                
+                                <div class="slice-body">
+                                    <div class="metrics-row">
+                                        <div class="metric">
+                                            <div class="metric-value">{{ slice.bandwidth_mbps }}</div>
+                                            <div class="metric-label">Mbps</div>
+                                        </div>
+                                        <div class="metric">
+                                            <div class="metric-value">{{ slice.latency_ms }}</div>
+                                            <div class="metric-label">ms</div>
+                                        </div>
+                                        <div class="metric">
+                                            <div class="metric-value">{% if slice.expires_at %}{{ slice.expires_at|timeuntil }}{% else %}{{ slice.duration_hours }}h{% endif %}</div>
+                                            <div class="metric-label">{% if slice.expires_at %}Remaining{% else %}Duration{% endif %}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Connected Devices hidden on public dashboard -->
+                                    
+                                    <div class="actions">
+                                        {% if slice.status == 'ACTIVE' %}
+                                            <a href="/api/slices/{{ slice.id }}/network_info/" target="_blank" class="btn btn-outline">
+                                                <i class="fas fa-info-circle"></i> Details
+                                            </a>
+                                            <form action="/api/slices/{{ slice.id }}/terminate/" method="post" style="display: inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-warning" onclick="return confirm('Terminate this slice?')">
+                                                    <i class="fas fa-stop"></i> Terminate
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                        <form action="" method="post" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="slice_id" value="{{ slice.id }}">
+                                            <button type="submit" class="btn btn-danger" onclick="return confirm('Permanently delete slice {{ slice.name }}?')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="empty-state">
+                                <i class="fas fa-network-wired"></i>
+                                <h5>No Network Slices</h5>
+                                <p>Create your first network slice to get started with intelligent QoS management.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        
+
+            <!-- Create New Slice Panel -->
+            <div class="create-slice-panel">
+                {% if user.is_staff %}
+                <!-- Admin/Staff Full Form -->
+                <h4><i class="fas fa-plus-circle"></i> Create Network Slice</h4>
+                <p class="text-muted mb-4">Deploy a new network slice with custom QoS parameters and isolation.</p>
+                
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="name">Slice Name</label>
+                            <input type="text" id="name" name="name" class="form-control" placeholder="e.g., Gaming Session" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="slice_type">Slice Type</label>
+                            <select id="slice_type" name="slice_type" class="form-control" required>
+                                <option value="CORP">🏢 Corporate</option>
+                                <option value="GUEST">👥 Guest</option>
+                                <option value="IOT">🧩 IoT</option>
+                                <option value="GAMING">🎮 Gaming</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="bandwidth_mbps">Bandwidth (Mbps)</label>
+                            <input type="number" id="bandwidth_mbps" name="bandwidth_mbps" class="form-control" value="10" min="1" max="1000" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="latency_ms">Max Latency (ms)</label>
+                            <input type="number" id="latency_ms" name="latency_ms" class="form-control" value="50" min="1" max="1000" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="duration_hours">Duration (hours)</label>
+                            <input type="number" id="duration_hours" name="duration_hours" class="form-control" value="1" min="1" max="168" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i> Deploy Network Slice
+                    </button>
+                </form>
+                {% else %}
+                <!-- Guest User Limited Form -->
+                <h4><i class="fas fa-user"></i> Create Guest Network</h4>
+                <p class="text-muted mb-3">Create a guest network slice with predefined settings.</p>
+                
+                <div class="alert alert-warning mb-3">
+                    <i class="fas fa-info-circle"></i> <strong>Guest User:</strong> Limited to Guest network slices with predefined settings for security.
+                </div>
+                
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="slice_type" value="GUEST">
+                    <input type="hidden" name="bandwidth_mbps" value="10">
+                    <input type="hidden" name="latency_ms" value="50">
+                    <input type="hidden" name="duration_hours" value="24">
+                    
+                    <div class="form-group">
+                        <label for="name">Network Name</label>
+                        <input type="text" id="name" name="name" class="form-control" placeholder="My Guest Network" required>
+                        <small class="form-text text-muted">Choose a unique name for your guest network slice.</small>
+                    </div>
+                    
+                    <div class="guest-slice-info">
+                        <h6>Your slice will be created with:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> <strong>Type:</strong> Guest Network</li>
+                            <li><i class="fas fa-check text-success"></i> <strong>Bandwidth:</strong> 10 Mbps</li>
+                            <li><i class="fas fa-check text-success"></i> <strong>Max Latency:</strong> 50ms</li>
+                            <li><i class="fas fa-check text-success"></i> <strong>Duration:</strong> 24 hours</li>
+                        </ul>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus-circle"></i> Create Guest Network
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+    // Auto-refresh for real-time updates
+    <script>
+    let autoRefreshInterval;
+    let statusPollingActive = false;
+    
+    // QoS Verification functionality
+    async function checkQoSStatus(sliceId) {
+        try {
+            const response = await fetch(`/api/slices/${sliceId}/qos_status/`);
+            const qosData = await response.json();
+            
+            // Update QoS status indicator
+            const statusIcon = document.getElementById(`qos-status-${sliceId}`);
+            const panel = document.getElementById(`qos-panel-${sliceId}`);
+            const actualBandwidth = document.getElementById(`actual-bandwidth-${sliceId}`);
+            const verification = document.getElementById(`qos-verification-${sliceId}`);
+            
+            if (!statusIcon || !panel) return;
+            
+            // Show verification panel
+            panel.style.display = 'block';
+            
+            // Update status icon
+            if (qosData.verified) {
+                statusIcon.innerHTML = '<i class="fas fa-check-circle text-success" title="QoS Verified"></i>';
+            } else {
+                statusIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-warning" title="QoS Issues"></i>';
+            }
+            
+            // Update actual bandwidth display
+            if (actualBandwidth) {
+                if (qosData.actual_bandwidth) {
+                    actualBandwidth.innerHTML = `<strong>${qosData.actual_bandwidth} Mbps</strong>`;
+                } else {
+                    actualBandwidth.innerHTML = '<span class="text-muted">Not configured</span>';
+                }
+            }
+            
+            // Update verification status
+            if (verification) {
+                if (qosData.verified) {
+                    verification.innerHTML = `
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle"></i> Bandwidth allocation verified successfully!
+                        </div>
+                    `;
+                } else if (qosData.issues && qosData.issues.length > 0) {
+                    verification.innerHTML = `
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i> QoS Issues Found:
+                            <ul class="mb-0 mt-2">
+                                ${qosData.issues.map(issue => `<li>${issue}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    verification.innerHTML = `
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i> QoS configuration could not be verified.
+                        </div>
+                    `;
+                }
+            }
+            
+        } catch (error) {
+            console.error('QoS status check failed:', error);
+            const statusIcon = document.getElementById(`qos-status-${sliceId}`);
+            if (statusIcon) {
+                statusIcon.innerHTML = '<i class="fas fa-times-circle text-danger" title="QoS Check Failed"></i>';
+            }
+        }
+    }
+    
+    // Check QoS status for all active slices on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const activeSlices = document.querySelectorAll('.slice-card.active');
+        activeSlices.forEach(card => {
+            const sliceId = card.querySelector('[data-slice-id]')?.getAttribute('data-slice-id');
+            if (sliceId) {
+                // Delay QoS check to allow interface setup
+                setTimeout(() => checkQoSStatus(sliceId), 2000);
+            }
+        });
+        
+        startStatusPolling();
+    });
+    
+    function startStatusPolling() {
+        if (statusPollingActive) return;
+        statusPollingActive = true;
+        
+        // Poll every 3 seconds for slice status + device counts
+        autoRefreshInterval = setInterval(async function() {
+            try {
+                const response = await fetch('/api/slices/status_snapshot/');
+                const data = await response.json();
+                updateSliceStatuses(data.results || []);
+            } catch (error) {
+                console.error('Status polling failed:', error);
+            }
+        }, 3000);
+        
+        console.log('Real-time status polling started');
+    }
+    
+    function stopStatusPolling() {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+            statusPollingActive = false;
+            console.log('Status polling stopped');
+        }
+    }
+    
+    function updateSliceStatuses(slices) {
+        let needsReload = false;
+        
+        slices.forEach(slice => {
+            const sliceCard = document.querySelector(`[data-slice-id="${slice.id}"]`);
+            if (!sliceCard) return;
+            
+            // Get current status from DOM
+            const statusBadge = sliceCard.querySelector('.status-badge');
+            const currentStatus = statusBadge ? statusBadge.textContent.trim().toUpperCase() : '';
+            
+            // Check if slice just became ACTIVE (transition detection)
+            if (slice.status === 'ACTIVE' && currentStatus !== 'ACTIVE') {
+                needsReload = true;
+                console.log(`Slice ${slice.name} became ACTIVE - page reload needed`);
+            }
+            
+            // Update status badge
+            if (statusBadge) {
+                statusBadge.textContent = slice.status;
+                statusBadge.className = `status-badge status-${slice.status.toLowerCase()}`;
+            }
+            
+            // Update connected devices count directly if provided
+            const deviceSection = sliceCard.querySelector('.connected-devices');
+            if (deviceSection && typeof slice.connected_devices_count === 'number') {
+                const countSpan = deviceSection.querySelector('.device-count');
+                if (countSpan) countSpan.textContent = `(${slice.connected_devices_count})`;
+                // Always refresh list when ACTIVE (lightweight endpoint internally)
+                if (slice.status === 'ACTIVE') {
+                    updateConnectedDevices(slice.id);
+                }
+            }
+            
+            // If just became active ensure connection info shown
+            if (slice.status === 'ACTIVE' && slice.ssid_name) {
+                updateConnectionInfo(sliceCard, slice);
+            }
+        });
+        
+        // Reload page if any slice just became active
+        if (needsReload) {
+            console.log('Reloading page to show QR codes and connection details...');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000); // Small delay to show status change first
+        }
+    }
+    
+    async function updateConnectionInfo(sliceCard, slice) {
+        const qrContainer = sliceCard.querySelector('.qr-code-container');
+        const connectionInfo = sliceCard.querySelector('.connection-info');
+        
+        if (qrContainer && !qrContainer.innerHTML.trim()) {
+            // Fetch QR code if not already displayed
+            try {
+                const response = await fetch(`/api/slices/${slice.id}/qr_code/`);
+                const qrData = await response.json();
+                if (qrData.qr_code) {
+                    qrContainer.innerHTML = `<img src="${qrData.qr_code}" alt="QR Code" style="max-width: 200px;">`;
+                }
+            } catch (error) {
+                console.error('QR code fetch failed:', error);
+            }
+        }
+        
+        if (connectionInfo && slice.ssid_name) {
+            // Render SSID + password controls (copy + show/hide)
+            const pwd = slice.wifi_password || '';
+            const masked = pwd ? '•'.repeat(Math.min(pwd.length, 12)) : 'Loading...';
+            connectionInfo.innerHTML = `
+                <strong>📶 SSID:</strong> <span class="ssid-text">${slice.ssid_name}</span><br>
+                <div class="d-flex align-items-center gap-2" style="margin-top: 6px; flex-wrap: wrap;">
+                    <div>
+                        <strong>🔑 Password:</strong>
+                        <span class="password-text" data-plain="${pwd}" data-visible="false">${masked}</span>
+                    </div>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Password controls">
+                        <button class="btn btn-outline-secondary copy-password-btn" type="button"><i class="fas fa-copy"></i> Copy</button>
+                        <button class="btn btn-outline-secondary toggle-password-btn" type="button">Show</button>
+                    </div>
+                </div>
+            `;
+            attachPasswordControls(sliceCard);
+        }
+    }
+    
+    async function updateConnectedDevices(sliceId) {
+        try {
+            const response = await fetch(`/api/slices/${sliceId}/connected_devices/`);
+            const data = await response.json();
+            const deviceContainer = document.querySelector(`[data-slice-id="${sliceId}"] .connected-devices`);
+            
+            if (deviceContainer && data.connected_devices !== undefined) {
+                const deviceCount = data.connected_devices.length;
+                const deviceCountSpan = deviceContainer.querySelector('.device-count');
+                const deviceList = deviceContainer.querySelector('.device-list');
+                
+                // Update device count
+                if (deviceCountSpan) {
+                    deviceCountSpan.textContent = `(${deviceCount})`;
+                }
+                
+                // Update device list
+                if (deviceList) {
+                    if (deviceCount === 0) {
+                        deviceList.innerHTML = '<small class="text-muted">No devices connected</small>';
+                    } else {
+                        let deviceHtml = '';
+                        data.connected_devices.forEach(device => {
+                            deviceHtml += `
+                                <div class="device-item">
+                                    <div class="device-hostname">${device.hostname || 'Unknown Device'}</div>
+                                    <div class="device-details">${device.ip || 'Unknown IP'} • ${device.mac ? device.mac.substring(0, 8) + '...' : 'Unknown MAC'}</div>
+                                </div>
+                            `;
+                        });
+                        deviceList.innerHTML = deviceHtml;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Connected devices fetch failed:', error);
+            // Show error state
+            const deviceContainer = document.querySelector(`[data-slice-id="${sliceId}"] .connected-devices .device-list`);
+            if (deviceContainer) {
+                deviceContainer.innerHTML = '<small class="text-muted">Error loading devices</small>';
+            }
+        }
+    }
+    
+    // Start polling when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        startStatusPolling();
+        
+        // Stop polling when page is hidden/unloaded
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopStatusPolling();
+            } else {
+                startStatusPolling();
+            }
+        });
+        
+        window.addEventListener('beforeunload', stopStatusPolling);
+    });
+
+    function attachPasswordControls(sliceCard) {
+        try {
+            const pwdSpan = sliceCard.querySelector('.password-text');
+            const copyBtn = sliceCard.querySelector('.copy-password-btn');
+            const toggleBtn = sliceCard.querySelector('.toggle-password-btn');
+            if (!pwdSpan || !copyBtn || !toggleBtn) return;
+
+            copyBtn.onclick = async () => {
+                const plain = pwdSpan.getAttribute('data-plain') || '';
+                try {
+                    await navigator.clipboard.writeText(plain);
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied';
+                    setTimeout(() => copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy', 1500);
+                } catch (e) {
+                    console.error('Clipboard copy failed', e);
+                }
+            };
+
+            toggleBtn.onclick = () => {
+                const visible = pwdSpan.getAttribute('data-visible') === 'true';
+                const plain = pwdSpan.getAttribute('data-plain') || '';
+                if (visible) {
+                    // Hide
+                    pwdSpan.textContent = plain ? '•'.repeat(Math.min(plain.length, 12)) : '';
+                    pwdSpan.setAttribute('data-visible', 'false');
+                    toggleBtn.textContent = 'Show';
+                } else {
+                    // Show
+                    pwdSpan.textContent = plain;
+                    pwdSpan.setAttribute('data-visible', 'true');
+                    toggleBtn.textContent = 'Hide';
+                }
+            };
+        } catch (e) {
+            // no-op
+        }
+    }
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Disable full page auto-reload; use lightweight metrics polling instead
+        
+        // Form submission handling
+        let formSubmitted = false;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevent multiple submissions
+            const createForms = document.querySelectorAll('form:not([action*="terminate"]):not([data-delete])');
+            createForms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    if (formSubmitted) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    if (!form.querySelector('input[name="action"]')) {
+                        formSubmitted = true;
+                        const submitBtn = form.querySelector('button[type="submit"]');
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+                        }
+                        setTimeout(() => {
+                            formSubmitted = false;
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = '<i class="fas fa-rocket"></i> Deploy Network Slice';
+                            }
+                        }, 5000);
+                    }
+                });
+            });
+            
+            // Add smooth animations
+            const cards = document.querySelectorAll('.slice-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+        
+        // Live metrics (in-app): fetch from our admin JSON endpoint
+        async function fetchLiveMetrics() {
+            try {
+                const res = await fetch('/admin/qos/metrics/');
+                if (!res.ok) return;
+                const data = await res.json();
+                const active = (data.slice_metrics || []).length;
+                const totalThroughput = (data.slice_metrics || []).reduce((s, x) => s + (x.current_throughput || 0), 0);
+                const avgLatency = (data.slice_metrics || []).length ? (data.slice_metrics.reduce((s, x) => s + (x.current_latency || 0), 0) / data.slice_metrics.length) : 0;
+                const dnet = data.slice_metrics ? data.slice_metrics.filter(x => x.vlan_id).length : 0;
+
+                const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = (typeof val === 'number') ? val.toFixed(1) : val; };
+                setText('lm-active', active);
+                setText('lm-throughput', totalThroughput);
+                setText('lm-latency', avgLatency);
+                setText('lm-dnet', dnet);
+            } catch (e) {
+                // ignore transient errors
+            }
+        }
+
+        // Poll every 5s
+        setInterval(fetchLiveMetrics, 5000);
+        fetchLiveMetrics();
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# hostapd VLAN configuration
+# Format: <VLAN ID> <VLAN interface>
+
+# Quarantine VLAN (default for all devices)
+99 br-vlan99
+
+# Network Slice VLANs (examples - create as needed)
+10 br-vlan10
+20 br-vlan20
+30 br-vlan30
+40 br-vlan40
+50 br-vlan50

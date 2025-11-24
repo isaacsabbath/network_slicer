@@ -1,0 +1,15 @@
+Django>=3.2
+requests
+psutil
+qrcode[pil]
+beautifulsoup4
+docker
+pillow
+
+# For REST framework
+djangorestframework
+
+# Optional: For enhanced QR code generation
+segno
+
+# (Removed Prometheus/Grafana integration)
