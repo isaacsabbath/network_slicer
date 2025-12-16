@@ -927,10 +927,10 @@
                                     
                                     <div class="actions">
                                         <a href="/api/slices/{{ slice.id }}/qr_code/" target="_blank" class="btn btn-outline">
-                                            <i class="fas fa-qrcode"></i> QR Code
+                                             
                                         </a>
                                         <a href="/api/slices/{{ slice.id }}/network_info/" target="_blank" class="btn btn-outline">
-                                            <i class="fas fa-info-circle"></i> Details
+                                            
                                         </a>
                                         <form action="/api/slices/{{ slice.id }}/terminate/" method="post" style="display: inline;">
                                             {% csrf_token %}
@@ -1124,6 +1124,71 @@
     <script>
     let autoRefreshInterval;
     let statusPollingActive = false;
+    
+    // AJAX-based real-time updates - refresh slice list every 10 seconds
+    setInterval(async () => {
+        await refreshSliceList();
+    }, 10000); // 10 seconds
+    
+    async function refreshSliceList() {
+        try {
+            const response = await fetch('/api/slices/');
+            const data = await response.json();
+            const slices = data.results || data;
+            
+            // Update each slice card with latest data
+            slices.forEach(slice => {
+                updateSliceCard(slice);
+            });
+            
+            // Check if new slices were created (not in DOM yet)
+            const currentSliceIds = Array.from(document.querySelectorAll('[data-slice-id]'))
+                .map(el => el.getAttribute('data-slice-id'));
+            
+            const newSlices = slices.filter(slice => !currentSliceIds.includes(slice.id));
+            
+            if (newSlices.length > 0) {
+                // New slices detected - reload page to show them
+                console.log('New slices detected, reloading page...');
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('AJAX refresh failed:', error);
+        }
+    }
+    
+    function updateSliceCard(slice) {
+        const sliceCard = document.querySelector(`[data-slice-id="${slice.id}"]`);
+        if (!sliceCard) return;
+        
+        // Update status badge
+        const statusBadge = sliceCard.querySelector('.status-badge');
+        if (statusBadge && statusBadge.textContent.trim().toUpperCase() !== slice.status) {
+            statusBadge.textContent = slice.status;
+            statusBadge.className = `status-badge status-${slice.status.toLowerCase()}`;
+            
+            // If just became active, reload to show connection details
+            if (slice.status === 'ACTIVE') {
+                setTimeout(() => window.location.reload(), 500);
+            }
+        }
+        
+        // Update connected devices count
+        if (slice.connected_devices_count !== undefined) {
+            const deviceCount = sliceCard.querySelector('.device-count');
+            if (deviceCount) {
+                deviceCount.textContent = `(${slice.connected_devices_count})`;
+            }
+        }
+        
+        // Update SSID if available
+        if (slice.ssid_name) {
+            const ssidElement = sliceCard.querySelector('.ssid-name');
+            if (ssidElement) {
+                ssidElement.textContent = slice.ssid_name;
+            }
+        }
+    }
     
     // QoS Verification functionality
     async function checkQoSStatus(sliceId) {

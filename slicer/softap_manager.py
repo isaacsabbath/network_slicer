@@ -44,15 +44,24 @@ class SoftAPManager:
         return None
     
     def _generate_ssid_name(self, slice_instance):
-        """Generate SSID name based on slice type"""
-        type_map = {
-            'URLLC': 'Gaming',
-            'EMBB': 'Streaming', 
-            'MMTC': 'IoT'
-        }
-        type_name = type_map.get(slice_instance.slice_type, 'Slice')
-        uuid_str = str(slice_instance.id)
-        return f"NetSlice_{type_name}_{uuid_str[:8]}"
+        """Generate SSID name - use slice name if provided, otherwise auto-generate"""
+        if slice_instance.name and len(slice_instance.name.strip()) > 0:
+            # Use the slice name from dashboard, sanitize for WiFi SSID
+            ssid = slice_instance.name.strip()
+            # Replace spaces with underscores and remove invalid characters
+            ssid = ''.join(c if c.isalnum() or c in '-_' else '_' for c in ssid)
+            # Limit to 32 characters (WiFi SSID max length)
+            return ssid[:32]
+        else:
+            # Fallback to auto-generated name
+            type_map = {
+                'URLLC': 'Gaming',
+                'EMBB': 'Streaming', 
+                'MMTC': 'IoT'
+            }
+            type_name = type_map.get(slice_instance.slice_type, 'Slice')
+            uuid_str = str(slice_instance.id)
+            return f"NetSlice_{type_name}_{uuid_str[:8]}"
     
     def _generate_wifi_password(self):
         """Generate a random WiFi password"""
@@ -115,16 +124,16 @@ class SoftAPManager:
     def create_virtual_network(self, slice_instance):
         """Create a real virtual WiFi network"""
         if not self.wifi_interface:
-            print("❌ No WiFi interface available")
+            print(" No WiFi interface available")
             return False
 
         # If another slice is active, cleanup previous AP before starting new
         if self.current_slice_id and self.current_slice_id != slice_instance.id:
             try:
-                print(f"🔁 Handoff: stopping previous slice AP (slice {self.current_slice_id})")
+                print(f" Handoff: stopping previous slice AP (slice {self.current_slice_id})")
                 self._cleanup_previous_ap()
             except Exception as e:
-                print(f"⚠️  Previous AP cleanup warning: {e}")
+                print(f"  Previous AP cleanup warning: {e}")
         
         ssid = self._generate_ssid_name(slice_instance)
         password = self._generate_wifi_password()
@@ -145,7 +154,7 @@ class SoftAPManager:
                 try:
                     self._configure_ap_network(slice_instance)
                 except Exception as e:
-                    print(f"⚠️  AP networking setup warning: {e}")
+                    print(f"  AP networking setup warning: {e}")
 
                 # Track current slice/AP
                 self.current_slice_id = slice_instance.id
@@ -154,11 +163,11 @@ class SoftAPManager:
                 print(f"🔑 Password: {password}")
                 return True
             
-            print("❌ SoftAP creation failed")
+            print(" SoftAP creation failed")
             return False
             
         except Exception as e:
-            print(f"❌ SoftAP creation failed: {e}")
+            print(f" SoftAP creation failed: {e}")
             return False
     
     def _simple_hostapd_start(self, ssid, password):

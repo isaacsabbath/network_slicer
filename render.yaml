@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: network-slicer
+    env: python
+    region: oregon
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn network_slicer.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: network_slicer.settings
+      - key: DEBUG
+        value: False
+      - key: ENABLE_WIFI_SLICING
+        value: False

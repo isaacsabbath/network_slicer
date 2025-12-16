@@ -5,6 +5,9 @@ qrcode[pil]
 beautifulsoup4
 docker
 pillow
+gunicorn
+whitenoise
+dj-database-url
 
 # For REST framework
 djangorestframework
