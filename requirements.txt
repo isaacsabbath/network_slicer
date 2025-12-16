@@ -8,6 +8,7 @@ pillow
 gunicorn
 whitenoise
 dj-database-url
+psycopg2-binary
 
 # For REST framework
 djangorestframework
