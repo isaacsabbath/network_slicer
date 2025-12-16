@@ -94,16 +94,18 @@ WSGI_APPLICATION = 'network_slicer.wsgi.application'
 
 import dj_database_url
 
-# Use PostgreSQL if DATABASE_URL is set (Render), otherwise SQLite
-if os.getenv('DATABASE_URL'):
+# Use PostgreSQL if DATABASE_URL is set and valid (Render), otherwise SQLite
+database_url = os.getenv('DATABASE_URL', '')
+if database_url and database_url.startswith(('postgres://', 'postgresql://')):
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.getenv('DATABASE_URL'),
+            default=database_url,
             conn_max_age=600,
             conn_health_checks=True,
         )
     }
 else:
+    # Fallback to SQLite for development or when DATABASE_URL is invalid
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
