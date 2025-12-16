@@ -92,20 +92,34 @@ WSGI_APPLICATION = 'network_slicer.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-import dj_database_url
-
-# Use PostgreSQL if DATABASE_URL is set and valid (Render), otherwise SQLite
-database_url = os.getenv('DATABASE_URL', '')
-if database_url and database_url.startswith(('postgres://', 'postgresql://')):
+# Check if we have PostgreSQL credentials via environment variables
+if os.getenv('DB_HOST'):
+    # Use PostgreSQL with individual environment variables
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'network_slicer'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'CONN_MAX_AGE': 600,
+            'OPTIONS': {
+                'connect_timeout': 10,
+            }
+        }
+    }
+elif os.getenv('DATABASE_URL'):
+    # Fallback to DATABASE_URL if provided
+    import dj_database_url
     DATABASES = {
         'default': dj_database_url.config(
-            default=database_url,
+            default=os.getenv('DATABASE_URL'),
             conn_max_age=600,
-            conn_health_checks=True,
         )
     }
 else:
-    # Fallback to SQLite for development or when DATABASE_URL is invalid
+    # Use SQLite for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
